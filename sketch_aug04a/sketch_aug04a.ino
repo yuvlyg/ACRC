@@ -55,20 +55,27 @@ void setup()
   move_servo(OFF_POS);
 }
 
+
+void handle_message(char message){
+    if (message == '1'){
+      move_servo(ON_POS);
+    } else if (message == '0') {
+      move_servo(OFF_POS);
+    }
+}
+
 void loop() 
 {
   digitalWrite(LED_PIN, HIGH);
   if (BT.available()){
     char t = BT.read();
     Serial.write(t); // write all on the SerialMonitor what is getting from Bluetooth
-    if(t == '1'){
-      move_servo(ON_POS);
-    } else if(t == '0') {
-      move_servo(OFF_POS);
-    }
+    handle_message(t);
   }
-  if (Serial.available())
-    BT.write(Serial.read()); // write to Bluetooth all is getting from SerialMonitor
+  if (Serial.available()){
+    char t = Serial.read();
+    handle_message(t); // for debugging - handle message from serial as well
+  }
 }
 
 
