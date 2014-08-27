@@ -14,9 +14,8 @@ Arduino pins:
  */
  
 #include <SoftwareSerial.h>
-
 #include <Servo.h> 
- 
+
 Servo upper_servo;  // create servo object to control a servo 
 Servo lower_servo;
 
@@ -32,12 +31,22 @@ int U_OFF_POS = 100;
 int L_ON_POS = 160;
 int L_OFF_POS = 100;
 
-int upper_servo_pos = U_OFF_POS;
-int lower_servo_pos = L_OFF_POS;
+int INITIAL_SERVO_DELAY = 15;
+int servo_delay = INITIAL_SERVO_DELAY;
+
+// config delay parsing
+int tmp_delay;
+bool configuring_delay = false;
 
 //enums
-int UPPER = 0;
-int LOWER = 1;
+const int UPPER = 0;
+const int LOWER = 1;
+const int MOVE_UPPER = 0x30;         // '0'
+const int MOVE_LOWER = 0x31;         // '1'
+const int CONFIG_DELAY_START = 0x64; // 'd'
+const int CONFIG_DELAY_STOP = 0x73;  // 's'
+
+
 
 void setup()  
 {
@@ -79,34 +88,60 @@ void handle_message(char message){
 void loop() 
 {
   digitalWrite(LED_PIN, HIGH);
+  char t = 0x0;
   if (BT.available()){
-    char t = BT.read();
+    t = BT.read();
     Serial.write(t); // write all on the SerialMonitor what is getting from Bluetooth
-    handle_message(t);
   }
   if (Serial.available()){
-    char t = Serial.read();
-    handle_message(t); // for debugging - handle message from serial as well
+    t = Serial.read(); // for debugging - handle message from serial as well
+  }
+  if (t != 0x0) { // got input from either BT/Serial
+    if (configuring_delay) {
+      if (t == CONFIG_DELAY_STOP) {
+        servo_delay = tmp_delay;
+        tmp_delay = 0;
+        configuring_delay = false;
+        Serial.print("\nconfiguring delay: ");
+        Serial.print(servo_delay);
+      } else {
+        tmp_delay *= 10;
+        tmp_delay += t - '0';
+        Serial.print("\ntmp delay is ");
+        Serial.print(tmp_delay);
+      }
+    } else {
+      switch (t) {
+        case MOVE_UPPER:
+        case MOVE_LOWER:
+          handle_message(t);
+          break;
+        case CONFIG_DELAY_START:
+          tmp_delay = 0;
+          configuring_delay = true;
+          break;
+      }
+    }
   }
 }
 
 
 void move_servo(int servo_id, int dst_pos){
   Servo * servo;
-  int * pos;
+  int pos;
+  
   if (servo_id == UPPER){
     servo = &upper_servo;
-    pos = &upper_servo_pos;
   } else {
     servo = &lower_servo;
-    pos = &lower_servo_pos;
   }
-  int diff = *pos > dst_pos ? -1 : 1;
-  for(; *pos != dst_pos; *pos += diff)     // goes from cur_pos to dst_pos 
+  pos = servo->read();
+  int diff = pos > dst_pos ? -1 : 1;
+  for(; pos != dst_pos; pos += diff)     // goes from cur_pos to dst_pos 
   {
-    digitalWrite(LED_PIN, *pos % 20 < 10 ? HIGH : LOW);    
-    servo->write(*pos);              // tell servo to go to position in variable 'pos' 
-    delay(15);                       // waits 15ms for the servo to reach the position 
+    digitalWrite(LED_PIN, pos % 20 < 10 ? HIGH : LOW);    
+    servo->write(pos);              // tell servo to go to position in variable 'pos' 
+    delay(servo_delay);                      // waits 15ms for the servo to reach the position 
   }
 
   digitalWrite(LED_PIN, HIGH);
