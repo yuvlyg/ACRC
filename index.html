@@ -1,0 +1,82 @@
+<html>
+    <head>
+        <title>Air Conditioner Remote Control</title>
+        <style type="text/css">
+
+        .onbutton, .offbutton {
+            width: 20vw;
+            height: 20vw;
+            opacity: 0.9;
+
+            color: white;
+            font-size: 40px;
+            display: table;
+            text-align: center;
+            
+            border-radius: 10px;
+            float: left;
+            margin-top: 5vh;
+            margin-bottom: 2vh;
+
+
+        }
+        .onbutton:active, .offbutton:active {
+            opacity: 1;
+        }
+        .nounderline {
+            text-decoration: none;
+            display: inline-block;
+        }
+        .onbutton {
+            margin-right: 10vw;
+            background-color: green;
+        }
+        .offbutton {
+            background-color: red;
+        }
+        .buttonscontainer {
+            border-radius: 10px;
+            background-color: #a0a0ff;
+            text-align: center;
+        }
+        .status {
+            border-radius: 10px;
+            border-style: solid;
+            border-width: 1px;
+            background-color: gray;
+            padding: 10px;
+            display: inline-block;
+            margin-top: 20px;
+            margin-bottom: 10px;   
+        }
+        </style>
+        <script language="javascript">
+        function sub(a){
+            document.getElementById("action").value = a;
+            document.myform.submit()
+        }
+        </script>
+    </head>
+    <body>
+        <div class="buttonscontainer">
+            <form method="get" name="myform">
+                <div class="status">Status: %%%status%%%</div>
+                <br />
+                <a class="nounderline" href="#"><div class="onbutton" onclick="sub(1)"><span style="vertical-align: middle; display:table-cell;">on</span></div></a>
+                <a class="nounderline" href="#"><div class="offbutton" onclick="sub(0)"><span style="vertical-align: middle; display:table-cell;">off</span></div></a>
+            </form>
+            <form method="get" name="form2">
+                <div class="status">
+                    <input type="number" name="time1" style="width: 100px;">:
+                    <input type="number" name="time2" style="width: 100px;">
+                    <select name="timer_action">
+                        <option name="on" value="on">Turn ON</option>
+                        <option name="off" value="on">Turn OFF</option>
+                    </select>
+                    <input type="submit" value="Add timer">
+                </div>
+            </form>
+        </div>
+        <input type="hidden" name="action" id="action">
+    </body>
+</html>
